@@ -7,6 +7,9 @@
 # Different functions generate different parts (segments) of the PS1 prompt.
 # Each function should leave the colors in a clean state (e.g. call reset if they changed any colors).
 
+# content is edited from https://www.mikekasberg.com/blog/2021/06/28/my-new-bash-prompt.html
+# https://github.com/mkasberg/dotfiles/blob/99c51be200ad7b81a7a5c26ccf947259ad8a29d8/executable_dot_mkps1.sh#L3-L8
+
 # For Git PS1
 source /usr/lib/git-core/git-sh-prompt;
 export GIT_PS1_SHOWDIRTYSTATE=1
