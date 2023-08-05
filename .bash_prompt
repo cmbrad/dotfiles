@@ -15,6 +15,9 @@ export GIT_PS1_SHOWCONFLICTSTATE=conflict
 # For python virtual env disable venv default prompt since we customise it
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
+# hostname in prompt - uncomment to show
+# export PROMPT_SHOW_HOSTNAME=1
+
 __prompt_debian_chroot() {
     if ! [[ -z "$debian_chroot" ]] ; then
         echo " (💻 $(__font ${fg_orange} "$debian_chroot"))"
@@ -50,7 +53,12 @@ __prompt_time() {
 }
 
 __prompt_userhost() {
-    echo " $(__font ${bold}${fg_yellow} "\u")@$(__font ${bold}${fg_yellow} "\h")"
+    # always show username but allow hiding hostname as it may not be helpful
+    if ! [[ -z "$PROMPT_SHOW_HOSTNAME" ]]; then
+        echo " $(__font ${bold}${fg_yellow} "\u")@$(__font ${bold}${fg_yellow} "\h")"
+    else
+        echo " $(__font ${bold}${fg_yellow} "\u")"
+    fi
 }
 
 __prompt_workdir() {
