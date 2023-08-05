@@ -120,7 +120,9 @@ if ! shopt -oq posix; then
   fi
 fi
 
-export PATH=~/bin:~/go/bin/:$PATH
+export PATH=~/bin:~/.local/bin:~/go/bin:$PATH
 export KUBECONFIG=~/.kube/k3s.yml
 export PATH=$PATH:$HOME/.tfenv/bin
 alias config='/usr/bin/git --git-dir=/home/cmbrad/.cfg/ --work-tree=/home/cmbrad'
+
+eval "$(direnv hook bash)"
