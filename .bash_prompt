@@ -5,21 +5,24 @@
 
 # Configuration
 
-# git
-source /usr/lib/git-core/git-sh-prompt;
-export GIT_PS1_SHOWDIRTYSTATE=1
-export GIT_PS1_SHOWUNTRACKEDFILES=1
-export GIT_PS1_SHOWUPSTREAM=auto
-export GIT_PS1_SHOWCONFLICTSTATE=conflict
+# git - only load if the prompt is provided by the system
+GIT_SH_PROMPT_PATH=/usr/lib/git-core/git-sh-prompt
+if [[ -f "$GIT_SH_PROMPT_PATH" ]]; then
+    source /usr/lib/git-core/git-sh-prompt
+    export GIT_PS1_SHOWDIRTYSTATE=1
+    export GIT_PS1_SHOWUNTRACKEDFILES=1
+    export GIT_PS1_SHOWUPSTREAM=auto
+    export GIT_PS1_SHOWCONFLICTSTATE=conflict
+fi
 
 # For python virtual env disable venv default prompt since we customise it
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 # hostname in prompt - uncomment to show
-# export PROMPT_SHOW_HOSTNAME=1
+# PROMPT_SHOW_HOSTNAME=1
 
 # signal bell when command fails
-export PROMPT_BELL_ON_FAIL=1
+PROMPT_BELL_ON_FAIL=1
 
 __prompt_debian_chroot() {
     if ! [[ -z "$debian_chroot" ]] ; then
@@ -98,8 +101,10 @@ __prompt_box_bottom() {
 }
 
 __prompt_git() {
-    # Escaping the $ is intentional as otherwise we get artifcts
-    echo "\$(__git_ps1 ' (📚 $(__font ${bold}${fg_yellow} "%s"))')"
+    if [[ -f "$GIT_SH_PROMPT_PATH" ]]; then
+        # Escaping the $ is intentional as otherwise we get artifcts
+        echo "\$(__git_ps1 ' (📚 $(__font ${bold}${fg_yellow} "%s"))')"
+    fi
 }
 
 __prompt_user_prompt() {
