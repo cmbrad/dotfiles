@@ -16,13 +16,24 @@ export GIT_PS1_SHOWCONFLICTSTATE=conflict
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 __prompt_debian_chroot() {
-    if ! test -z "$debian_chroot" ; then
+    if ! [[ -z "$debian_chroot" ]] ; then
         echo " (💻 $(__font ${fg_orange} "$debian_chroot"))"
     fi
 }
 
+__prompt_aws() {
+    # try and include both profile and region if set
+    if ! [[ -z "$AWS_PROFILE" ]] && ! [[ -z "$AWS_REGION" ]] ; then
+        echo " (⛅ $(__font ${fg_yellowgreen} "${AWS_PROFILE}")@$(__font ${fg_yellowgreen} "${AWS_REGION}"))"
+    fi
+    # if AWS_PROFILE is set but without region then leave the region out of it
+    if ! [[ -z "$AWS_PROFILE" ]] && [[ -z "$AWS_REGION" ]] ; then
+        echo " (⛅ $(__font ${fg_yellowgreen} "${AWS_PROFILE}"))"
+    fi
+}
+
 __prompt_kubeconfig() {
-    if ! test -z "$KUBECONFIG" ; then
+    if ! [[ -z "$KUBECONFIG" ]] ; then
         echo " (🌌 $(__font ${fg_pink} "$(basename "$KUBECONFIG" .yml)"))"
     fi
 }
@@ -48,7 +59,7 @@ __prompt_workdir() {
 
 __prompt_python_venv() {
     # only add env information if a virtualenv is activated
-    if ! test -z "$VIRTUAL_ENV" ; then
+    if ! [[ -z "$VIRTUAL_ENV" ]] ; then
         echo " ($(__font ${fg_purple} "🐍 $(basename "${VIRTUAL_ENV}")"))"
     fi
 }
@@ -92,13 +103,14 @@ __prompt() {
     local fg_purple=`tput setaf 98`
     local fg_pink=`tput setaf 198`
     local fg_orange=`tput setaf 202`
+    local fg_yellowgreen=`tput setaf 190`
     # special
     local reset=`tput sgr0`
 
     # construct prompt - use each line to symbolise a line of the real 
     # start with \n so that we have a gap between the output of the prior result
     PS1="\n"
-    PS1+="$(__prompt_box_top)$(__prompt_exit_code)$(__prompt_time)$(__prompt_userhost)$(__prompt_workdir)$(__prompt_debian_chroot)$(__prompt_git)$(__prompt_python_venv)$(__prompt_kubeconfig)\n"
+    PS1+="$(__prompt_box_top)$(__prompt_exit_code)$(__prompt_time)$(__prompt_userhost)$(__prompt_workdir)$(__prompt_debian_chroot)$(__prompt_aws)$(__prompt_kubeconfig)$(__prompt_python_venv)$(__prompt_git)\n"
     PS1+="$(__prompt_box_bottom)$(__prompt_user_prompt)"
 }
 
