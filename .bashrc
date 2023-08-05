@@ -57,10 +57,14 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    source "$HOME/.mkps1.sh"
-    PS1="$(__mkps1)"
+    if [[ -f ~/.bash_prompt ]]; then
+        source ~/.bash_prompt
+    else
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\n\$ '
+    fi
+    #source "$HOME/.mkps1.sh"
+    #PS1="$(__mkps1)"
     #source "$HOME/.prompt2.sh"
-    #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\n\$ '
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi

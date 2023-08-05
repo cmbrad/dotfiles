@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+
+# content is edited from https://www.mikekasberg.com/blog/2021/06/28/my-new-bash-prompt.html
+# https://github.com/mkasberg/dotfiles/blob/99c51be200ad7b81a7a5c26ccf947259ad8a29d8/executable_dot_mkps1.sh#L3-L8
+
+# Configuration
+
+# git
+source /usr/lib/git-core/git-sh-prompt;
+export GIT_PS1_SHOWDIRTYSTATE=1
+export GIT_PS1_SHOWUNTRACKEDFILES=1
+export GIT_PS1_SHOWUPSTREAM=auto
+export GIT_PS1_SHOWCONFLICTSTATE=conflict
+
+# For python virtual env disable venv default prompt since we customise it
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
+__prompt_debian_chroot() {
+    echo '${debian_chroot:+($debian_chroot)}'
+}
+
+__prompt_exit_code() {
+    # cache exit code so we don't lose it
+    local code=$1
+
+    # colours
+    local bg_red=`tput setab 1`;
+    local white=`tput setaf 15`;
+    local reset=`tput sgr0`;
+
+    # only show non 0 codes to save space
+    if [[ "$code" -ne "0" ]]; then
+        # We need to run a function at runtime to evaluate the exitcode.
+        echo "\[${bg_red}${white}\] $code \[${reset}\]"
+    fi
+}
+
+__prompt_time() {
+    local BG_GRAY=`tput setab 240`;
+    local white=`tput setaf 7`;
+    local reset=`tput sgr0`;
+
+    echo "\[${BG_GRAY}${white}\] \t \[${reset}\]"
+}
+
+__prompt_userhost() {
+    local bold=`tput bold`;
+    local cyan=`tput setaf 227`;
+    local reset=`tput sgr0`;
+
+    echo "\[${cyan}\] \u\[${reset}${bold}\]@\[${reset}${cyan}\]\h \[${reset}\]";
+}
+
+__prompt_arrows() {
+    local bold=`tput bold`;
+    local blue=`tput setaf 250`;
+    local reset=`tput sgr0`;
+
+    echo "\[${bold}${blue}\]→\[${reset}\]";
+}
+
+__prompt_workdir() {
+    local bold=`tput bold`;
+    local blue=`tput setaf 42`;
+    local reset=`tput sgr0`;
+
+    echo "\[${bold}${blue}\]\w\[${reset}\]";
+}
+
+__prompt_python_venv() {
+    local purple=`tput setaf 98`;
+    local reset=`tput sgr0`;
+
+    # only add env information if a virtualenv is activated
+    if ! test -z "$VIRTUAL_ENV" ; then
+        echo " (${purple}$(basename "${VIRTUAL_ENV}")${reset})"
+    fi
+}
+
+__prompt_box_top() {
+    local cyan=`tput setaf 227`;
+    local reset=`tput sgr0`;
+    echo "\[${cyan}\]╭\[${reset}\]"
+}
+
+__prompt_box_bottom() {
+    local cyan=`tput setaf 227`;
+    local reset=`tput sgr0`;
+    echo "\[${cyan}\]╰\[${reset}\]"
+}
+
+__prompt_git() {
+    local pink=`tput setaf 206`;
+    local reset=`tput sgr0`;
+
+    # Escaping the $ is intentional:
+    # This is evaluated when the prompt is generated.
+    echo "\$(__git_ps1 ' (\[${pink}\]%s\[${reset}\])')"
+}
+
+__prompt_user_prompt() {
+    local bold=`tput bold`;
+    local cyan=`tput setaf 227`;
+    local reset=`tput sgr0`;
+    
+    echo "\[${bold}${cyan}\]▶\[${reset}\] ";
+}
+
+__prompt() {
+    # cache exit code so we don't lose it
+    exit_code=$?
+
+    # construct prompt - use each line to symbolise a line of the real 
+    # start with \n so that we have a gap between the output of the prior result
+    PS1="\n"
+    PS1+="$(__prompt_box_top)$(__prompt_debian_chroot)$(__prompt_exit_code $exit_code)$(__prompt_time)$(__prompt_userhost)$(__prompt_arrows) $(__prompt_workdir)$(__prompt_git)$(__prompt_python_venv)\n"
+    PS1+="$(__prompt_box_bottom)$(__prompt_user_prompt)"
+}
+
+PROMPT_COMMAND=__prompt
