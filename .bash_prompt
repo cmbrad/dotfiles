@@ -18,6 +18,9 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 # hostname in prompt - uncomment to show
 # export PROMPT_SHOW_HOSTNAME=1
 
+# signal bell when command fails
+export PROMPT_BELL_ON_FAIL=1
+
 __prompt_debian_chroot() {
     if ! [[ -z "$debian_chroot" ]] ; then
         echo " (💻 $(__font ${fg_orange} "$debian_chroot"))"
@@ -44,7 +47,14 @@ __prompt_kubeconfig() {
 __prompt_exit_code() {
     # only show non 0 codes to save space
     if [[ "$exit_code" -ne "0" ]]; then
-        echo "$(__font ${bg_red}${fg_white} " $exit_code ")"
+        res="$(__font ${bg_red}${fg_white} " $exit_code ")"
+
+        # if enabled then bell on failure
+        if ! [[ -z "$PROMPT_BELL_ON_FAIL" ]]; then
+            res="${res}\a"
+        fi
+
+        echo "$res"
     fi
 }
 
@@ -68,7 +78,14 @@ __prompt_workdir() {
 __prompt_python_venv() {
     # only add env information if a virtualenv is activated
     if ! [[ -z "$VIRTUAL_ENV" ]] ; then
-        echo " ($(__font ${fg_purple} "🐍 $(basename "${VIRTUAL_ENV}")"))"
+        # if using direnv then get the actual project name
+        if ! [[ "$VIRTUAL_ENV" =~ ^.+/\.direnv/.+$ ]]; then
+            echo " ($(__font ${fg_purple} "🐍 $(basename "${VIRTUAL_ENV}")"))"
+        else
+            # example: /home/cmbrad/projects/asus_exporter/.direnv/python-3.10
+            # call dirname twice to get the 3rd last directory
+            echo " ($(__font ${fg_purple} "🐍 $(basename $(dirname $(dirname "${VIRTUAL_ENV}")))"))"
+        fi
     fi
 }
 
