@@ -16,105 +16,91 @@ export GIT_PS1_SHOWCONFLICTSTATE=conflict
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 __prompt_debian_chroot() {
-    echo '${debian_chroot:+($debian_chroot)}'
+    if ! test -z "$debian_chroot" ; then
+        echo " (💻 $(__font ${fg_orange} "$debian_chroot"))"
+    fi
+}
+
+__prompt_kubeconfig() {
+    if ! test -z "$KUBECONFIG" ; then
+        echo " (🌌 $(__font ${fg_pink} "$(basename "$KUBECONFIG" .yml)"))"
+    fi
 }
 
 __prompt_exit_code() {
-    # cache exit code so we don't lose it
-    local code=$1
-
-    # colours
-    local bg_red=`tput setab 1`;
-    local white=`tput setaf 15`;
-    local reset=`tput sgr0`;
-
     # only show non 0 codes to save space
-    if [[ "$code" -ne "0" ]]; then
-        # We need to run a function at runtime to evaluate the exitcode.
-        echo "\[${bg_red}${white}\] $code \[${reset}\]"
+    if [[ "$exit_code" -ne "0" ]]; then
+        echo "$(__font ${bg_red}${fg_white} " $exit_code ")"
     fi
 }
 
 __prompt_time() {
-    local BG_GRAY=`tput setab 240`;
-    local white=`tput setaf 7`;
-    local reset=`tput sgr0`;
-
-    echo "\[${BG_GRAY}${white}\] \t \[${reset}\]"
+    echo "$(__font ${bg_gray}${fg_white} " \t ")"
 }
 
 __prompt_userhost() {
-    local bold=`tput bold`;
-    local cyan=`tput setaf 227`;
-    local reset=`tput sgr0`;
-
-    echo "\[${cyan}\] \u\[${reset}${bold}\]@\[${reset}${cyan}\]\h \[${reset}\]";
-}
-
-__prompt_arrows() {
-    local bold=`tput bold`;
-    local blue=`tput setaf 250`;
-    local reset=`tput sgr0`;
-
-    echo "\[${bold}${blue}\]→\[${reset}\]";
+    echo " $(__font ${bold}${fg_yellow} "\u")@$(__font ${bold}${fg_yellow} "\u")"
 }
 
 __prompt_workdir() {
-    local bold=`tput bold`;
-    local blue=`tput setaf 42`;
-    local reset=`tput sgr0`;
-
-    echo "\[${bold}${blue}\]\w\[${reset}\]";
+    echo " $(__font ${bold}${fg_lightgreen} "\w")"
 }
 
 __prompt_python_venv() {
-    local purple=`tput setaf 98`;
-    local reset=`tput sgr0`;
-
     # only add env information if a virtualenv is activated
     if ! test -z "$VIRTUAL_ENV" ; then
-        echo " (${purple}$(basename "${VIRTUAL_ENV}")${reset})"
+        echo " ($(__font ${fg_purple} "🐍 $(basename "${VIRTUAL_ENV}")"))"
     fi
 }
 
 __prompt_box_top() {
-    local cyan=`tput setaf 227`;
-    local reset=`tput sgr0`;
-    echo "\[${cyan}\]╭\[${reset}\]"
+    echo "$(__font ${fg_yellow} "╭")"
 }
 
 __prompt_box_bottom() {
-    local cyan=`tput setaf 227`;
-    local reset=`tput sgr0`;
-    echo "\[${cyan}\]╰\[${reset}\]"
+    echo "$(__font ${fg_yellow} "╰")"
 }
 
 __prompt_git() {
-    local pink=`tput setaf 206`;
-    local reset=`tput sgr0`;
-
-    # Escaping the $ is intentional:
-    # This is evaluated when the prompt is generated.
-    echo "\$(__git_ps1 ' (\[${pink}\]%s\[${reset}\])')"
+    # Escaping the $ is intentional as otherwise we get artifcts
+    echo "\$(__git_ps1 ' (📚 $(__font ${bold}${fg_yellow} "%s"))')"
 }
 
 __prompt_user_prompt() {
-    local bold=`tput bold`;
-    local cyan=`tput setaf 227`;
-    local reset=`tput sgr0`;
-    
-    echo "\[${bold}${cyan}\]▶\[${reset}\] ";
+    echo "$(__font ${bold}${fg_yellow} "▶") ";
+}
+
+__font() {
+    echo "\[${@:1:$#-1}\]${@:$#}\[${reset}\]"
 }
 
 __prompt() {
     # cache exit code so we don't lose it
-    exit_code=$?
+    local exit_code=$?
+
+    # colors
+    # ref: https://gist.github.com/dtmilano/4055d6df5b6e4ea87c5a72dc2d604193
+    # effects
+    local bold=`tput bold`
+    # background
+    local bg_red=`tput setab 1`;
+    local bg_gray=`tput setab 240`;
+    # foreground
+    local fg_white=`tput setaf 7`;
+    local fg_lightgreen=`tput setaf 42`
+    local fg_yellow=`tput setaf 227`
+    local fg_purple=`tput setaf 98`
+    local fg_pink=`tput setaf 198`
+    local fg_orange=`tput setaf 202`
+    # special
+    local reset=`tput sgr0`
 
     # construct prompt - use each line to symbolise a line of the real 
     # start with \n so that we have a gap between the output of the prior result
     PS1="\n"
-    PS1+="$(__prompt_box_top)$(__prompt_debian_chroot)$(__prompt_exit_code $exit_code)$(__prompt_time)$(__prompt_userhost)$(__prompt_arrows) $(__prompt_workdir)$(__prompt_git)$(__prompt_python_venv)\n"
+    PS1+="$(__prompt_box_top)$(__prompt_exit_code)$(__prompt_time)$(__prompt_userhost)$(__prompt_workdir)$(__prompt_debian_chroot)$(__prompt_git)$(__prompt_python_venv)$(__prompt_kubeconfig)\n"
     PS1+="$(__prompt_box_bottom)$(__prompt_user_prompt)"
 }
 
+# set prompt
 PROMPT_COMMAND=__prompt
