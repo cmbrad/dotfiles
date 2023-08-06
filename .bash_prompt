@@ -25,6 +25,9 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 # signal bell when command fails
 PROMPT_BELL_ON_FAIL=1
 
+# show the time duration of the command if longer than this in seconds
+PROMPT_TIME_WARN_THRESHOLD_SECS=5
+
 __prompt_debian_chroot() {
     if ! [[ -z "$debian_chroot" ]] ; then
         echo " (💻 $(__font ${fg_orange} "$debian_chroot"))"
@@ -114,8 +117,43 @@ __prompt_git() {
 }
 
 __prompt_user_prompt() {
-    echo "$(__font ${bold}${fg_yellow} "▶") ";
+    echo "$(__font ${bold}${fg_yellow} "▶") "
 }
+
+__timer_start() {
+    timer=${timer:-$SECONDS}
+}
+
+__timer_stop() {
+    unset timer
+}
+
+__format_secs() {
+    secs=$1
+    s=$((secs%60))
+    m=$((secs%3600/60))
+    h=$((secs/3600))
+    if [[ $h -eq 0 ]] && [[ $m -eq 0 ]]; then
+        # when only seconds let's not 0 pad
+        printf '%1ds\n' $s
+    fi
+    if [[ $h -eq 0 ]] && [[ $m -gt 0 ]]; then
+        printf '%1dm%1ds\n' $m $s
+    fi
+    if [[ $h -gt 0 ]] && [[ $m -gt 0 ]]; then
+        printf '%1dh%1dm%1ds\n' $h $m $s
+    fi
+}
+
+__prompt_last_time() {
+    last_time_secs=$(($SECONDS - $timer))
+
+    if [[ "$last_time_secs" -gt "$PROMPT_TIME_WARN_THRESHOLD_SECS" ]]; then
+        echo "$(__font ${bold}${fg_white}${bg_blue} " $(__format_secs $last_time_secs) ")"
+    fi
+}
+
+trap '__timer_start' DEBUG
 
 __font() {
     echo "\[${@:1:$#-1}\]${@:$#}\[${reset}\]"
@@ -130,8 +168,9 @@ __prompt() {
     # effects
     local bold=`tput bold`
     # background
-    local bg_red=`tput setab 1`;
-    local bg_gray=`tput setab 240`;
+    local bg_red=`tput setab 1`
+    local bg_gray=`tput setab 240`
+    local bg_blue=`tput setab 27`
     # foreground
     local fg_white=`tput setaf 7`;
     local fg_lightgreen=`tput setaf 42`
@@ -146,9 +185,9 @@ __prompt() {
     # construct prompt - use each line to symbolise a line of the real 
     # start with \n so that we have a gap between the output of the prior result
     PS1="\n"
-    PS1+="$(__prompt_box_top)$(__prompt_exit_code)$(__prompt_time)$(__prompt_userhost)$(__prompt_workdir)$(__prompt_debian_chroot)$(__prompt_aws)$(__prompt_kubeconfig)$(__prompt_python_venv)$(__prompt_git)\n"
+    PS1+="$(__prompt_box_top)$(__prompt_exit_code)$(__prompt_last_time)$(__prompt_time)$(__prompt_userhost)$(__prompt_workdir)$(__prompt_debian_chroot)$(__prompt_aws)$(__prompt_kubeconfig)$(__prompt_python_venv)$(__prompt_git)\n"
     PS1+="$(__prompt_box_bottom)$(__prompt_user_prompt)"
 }
 
 # set prompt
-PROMPT_COMMAND=__prompt
+PROMPT_COMMAND="__prompt; __timer_stop"
