@@ -13,6 +13,7 @@ if [[ -f "$GIT_SH_PROMPT_PATH" ]]; then
     export GIT_PS1_SHOWUNTRACKEDFILES=1
     export GIT_PS1_SHOWUPSTREAM=auto
     export GIT_PS1_SHOWCONFLICTSTATE=conflict
+    export GIT_PS1_SHOWCOLORHINTS=1
 fi
 
 # For python virtual env disable venv default prompt since we customise it
@@ -31,13 +32,19 @@ __prompt_debian_chroot() {
 }
 
 __prompt_aws() {
+    local region="${AWS_REGION:-${AWS_DEFAULT_REGION:-$AWS_PROFILE_REGION}}"
+
     # try and include both profile and region if set
-    if ! [[ -z "$AWS_PROFILE" ]] && ! [[ -z "$AWS_REGION" ]] ; then
-        echo " (⛅ $(__font ${fg_yellowgreen} "${AWS_PROFILE}")@$(__font ${fg_yellowgreen} "${AWS_REGION}"))"
+    if ! [[ -z "$AWS_PROFILE" ]] && ! [[ -z "$region" ]] ; then
+        echo " (⛅ $(__font ${fg_yellowgreen} "${AWS_PROFILE}")@$(__font ${fg_yellowgreen} "${region}"))"
     fi
-    # if AWS_PROFILE is set but without region then leave the region out of it
-    if ! [[ -z "$AWS_PROFILE" ]] && [[ -z "$AWS_REGION" ]] ; then
+    # if profile is set but without region then leave the region out of it
+    if ! [[ -z "$AWS_PROFILE" ]] && [[ -z "$region" ]] ; then
         echo " (⛅ $(__font ${fg_yellowgreen} "${AWS_PROFILE}"))"
+    fi
+    # if region is set but without profile then leave the profile out of it
+    if [[ -z "$AWS_PROFILE" ]] && ! [[ -z "$region" ]] ; then
+        echo " (⛅ $(__font ${fg_yellowgreen} "${region}"))"
     fi
 }
 
@@ -102,8 +109,7 @@ __prompt_box_bottom() {
 
 __prompt_git() {
     if [[ -f "$GIT_SH_PROMPT_PATH" ]]; then
-        # Escaping the $ is intentional as otherwise we get artifcts
-        echo "\$(__git_ps1 ' (📚 $(__font ${bold}${fg_yellow} "%s"))')"
+        echo " $(__git_ps1 "(📚 $(__font ${bold}${fg_yellow} "%s"))")"
     fi
 }
 
