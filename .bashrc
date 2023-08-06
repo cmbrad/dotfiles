@@ -120,6 +120,11 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# load bitwarden helper functions if present
+if [[ -f ~/.bitwardencli ]]; then
+    source ~/.bitwardencli
+fi
+
 export PATH=~/bin:~/.local/bin:~/go/bin:$PATH
 export KUBECONFIG=~/.kube/k3s.yml
 export PATH=$PATH:$HOME/.tfenv/bin
