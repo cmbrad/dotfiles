@@ -130,4 +130,6 @@ export KUBECONFIG=~/.kube/k3s.yml
 export PATH=$PATH:$HOME/.tfenv/bin
 alias config='/usr/bin/git --git-dir=/home/cmbrad/.cfg/ --work-tree=/home/cmbrad'
 
-eval "$(direnv hook bash)"
+if command -v direnv &> /dev/null; then
+  eval "$(direnv hook bash)"
+fi
